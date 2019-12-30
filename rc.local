@@ -16,6 +16,6 @@
 _IP=$(hostname -I) || true
 echo $_IP
 sudo python ~pi/RoboNinjaWarriorRaspberryPi/hybrid_serial_wrapper.py &
-sudo python ~pi/RoboNinjaWarriorRaspberryPi/PiSetupFiles/pi_control_gui.py &
+sudo python ~pi/RoboNinjaWarriorRaspberryPi/pi_control_gui.py &
 sudo ~pi/RoboNinjaWarriorRaspberryPi/detect_botvac.sh &
 exit 0

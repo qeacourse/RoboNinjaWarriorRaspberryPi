@@ -2,6 +2,8 @@
 
 echo "Make sure to run this as root (no sudo)"
 
+echo "blacklist cdc_acm" >> /etc/modprobe.d/blacklist.conf
+
 # configure wifi via wpa_supplicant
 echo "enter SSID:"
 read SSID

@@ -26,3 +26,5 @@ cp interfaces /etc/network/interfaces
 wget http://www.fars-robotics.net/install-wifi -O /usr/bin/install-wifi
 chmod +x /usr/bin/install-wifi
 install-wifi
+
+echo "You will need to reboot before connecting to the robot"

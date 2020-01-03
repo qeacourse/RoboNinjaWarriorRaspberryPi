@@ -17,10 +17,11 @@ wpa_passphrase $SSID $PSK >> /etc/wpa_supplicant/wpa_supplicant.conf
 echo "i2c-dev" >> /etc/modules
 echo "dtparam=i2c_arm=on" >> /boot/config.txt
 
-sudo apt-get update
-sudo apt-get install python-pip
+apt-get update
+apt-get install python-pip
 
-sudo pip install Adafruit_CharLCD serial
+pip install -U setuptools
+pip install Adafruit_CharLCD serial
 
 # install python libraries that are no longer available via standard installation methods
 #cp -r dist-packages/* /usr/local/lib/python2.7/dist-packages

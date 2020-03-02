@@ -25,7 +25,7 @@ cp rc.local /etc/rc.local
 cp interfaces /etc/network/interfaces
 
 # install wifi drivers (if custom versino needed)
-wget http://www.fars-robotics.net/install-wifi -O /usr/bin/install-wifi
+wget http://downloads.fars-robotics.net/wifi-drivers/install-wifi -O /usr/bin/install-wifi
 chmod +x /usr/bin/install-wifi
 install-wifi
 

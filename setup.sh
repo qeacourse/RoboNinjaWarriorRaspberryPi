@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# TODO: add install of tcpdump, starting of video-manager, enabling camera, and setting suid on tcpdump
 echo "Make sure to run this as root (no sudo)"
 
 echo "blacklist cdc_acm" >> /etc/modprobe.d/blacklist.conf

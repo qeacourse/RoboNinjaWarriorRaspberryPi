@@ -34,4 +34,9 @@ wget http://downloads.fars-robotics.net/wifi-drivers/install-wifi -O /usr/bin/in
 chmod +x /usr/bin/install-wifi
 install-wifi
 
+# setup tcpdump (needed for gstreamer pipeline)
+dpkg -i Video/libpcap0.8_1.3.0-1_armhf.deb
+dpkg -i Video/tcpdump_4.3.0-1+deb7u2_armhf.deb
+chmod u+s /usr/sbin/tcpdump
+
 echo "You will need to reboot before connecting to the robot"

@@ -18,6 +18,10 @@ wpa_passphrase $SSID $PSK >> /etc/wpa_supplicant/wpa_supplicant.conf
 echo "i2c-dev" >> /etc/modules
 echo "dtparam=i2c_arm=on" >> /boot/config.txt
 
+# setup camera
+echo "start_x=1" >> /boot/config.txt
+echo "gpu_mem=128" >> /boot/config.txt
+
 # install python libraries that are no longer available via standard installation methods
 cp -r dist-packages/* /usr/local/lib/python2.7/dist-packages
 

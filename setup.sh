@@ -39,4 +39,7 @@ dpkg -i Video/libpcap0.8_1.3.0-1_armhf.deb
 dpkg -i Video/tcpdump_4.3.0-1+deb7u2_armhf.deb
 chmod u+s /usr/sbin/tcpdump
 
+# setup gstreamer
+dpkg -i Video/gstreamer1.0-tools_1.2.0-1rpi3_armhf.deb
+
 echo "You will need to reboot before connecting to the robot"

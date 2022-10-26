@@ -221,7 +221,8 @@ class Redirector:
                     if data.startswith('protocolpreference'):
                         fields = data.split()
                         self.use_udp = fields[1].strip() == 'True'
-                        self.udp_dest_port = int(fields[2].strip())
+                        if len(fields) >= 3:
+                            self.udp_dest_port = int(fields[2].strip())
                     elif data.startswith('keepalive'):
                         # don't need to do anything... we have reset our timeout though by receiving this message
                         pass

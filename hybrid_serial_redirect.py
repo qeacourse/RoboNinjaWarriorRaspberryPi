@@ -4,7 +4,7 @@
 # redirect data from a TCP/IP connection to a serial port and vice versa
 # requires Python 2.2 'cause socket.sendall is used
 
-
+import traceback
 import sys
 import os
 import time
@@ -14,7 +14,7 @@ import socket
 import codecs
 import serial
 import re
-from Queue import Queue
+from queue import Queue
 from os import system
 from neato_sensor_packet import NeatoSensorPacket
 
@@ -23,19 +23,13 @@ ser = None
 def catch_SIGHUP(*args):
     global ser
     if ser == None:
-        print "reestablishing connection!"
+        print("reestablishing connection!")
         ser = connect_to_serial()
     if ser != None:
-	print "gracefully shutting down"
-	ser.write('\r\n')
-	ser.write('testmode off\r\n')
-	print "got the signal!"	
-
-try:
-    True
-except NameError:
-    True = 1
-    False = 0
+        print("gracefully shutting down")
+        ser.write('\r\n'.encode('utf-8'))
+        ser.write('testmode off\r\n'.encode('utf-8'))
+        print("got the signal!")	
 
 def connect_to_serial():
     global ser
@@ -49,35 +43,36 @@ def connect_to_serial():
     ser.timeout  = 1     # required so that the reader thread can exit
 
     while True:
-	for p in possible_ports:
-	    ser.port = p
-	    try:
-		ser.open()
-		print "Connected on port: " + p
-		return ser
-	    except:
-		time.sleep(1)
+        for p in possible_ports:
+            ser.port = p
+            try:
+                ser.open()
+                print("Connected on port: " + p)
+                return ser
+            except:
+                print('failed to connect on ' + p)
+                time.sleep(1)
 
 class Redirector:
     def __init__(self, serial_instance, tcp_socket, client_ip, ser_newline=None, net_newline=None):
         self.serial = serial_instance
-	n = self.serial.inWaiting()
-	if n:
-		self.serial.read(n)
-		print "flushed serial port"
+        n = self.serial.inWaiting()
+        if n:
+            self.serial.read(n)
+            print("flushed serial port")
         self.socket = tcp_socket
         self.sensor_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sensor_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	self.sensor_socket.bind(('0.0.0.0',7777))
+        self.sensor_socket.bind(('0.0.0.0',7777))
 
         # assume UDP until told otherwise
-        self.use_udp = True
         self.udp_dest_port = 7777
+        self.use_udp = True
 
         self.ser_newline = ser_newline
         self.net_newline = net_newline
         self._write_lock = threading.Lock()
-	self.serial_command_queue = Queue()
+        self.serial_command_queue = Queue()
         self.serial_read_flushed = False
         self.sensor_packet = ""
         self.client_ip = client_ip
@@ -116,30 +111,32 @@ class Redirector:
             self.serial_command_queue.put(("getmotors\n", '.*SideBrush_mA,[0-9\.]+'))
             self.serial_command_queue.put(("getdigitalsensors\n", '.*RFRONTBIT,[0-9\.]+'))
             self.serial_command_queue.put(("getaccel\n", '.*SumInG, [0-9\.]+'))
-	    while not self.serial_command_queue.empty():
+            while not self.serial_command_queue.empty():
                 next_cmd, terminal_re = self.serial_command_queue.get()
                 self.write_command_to_serial(next_cmd)
-		# need to sleep until the serial port is empty, could use a condition... for now just spin wait
+                # need to sleep until the serial port is empty, could use a condition... for now just spin wait
                 search_count = 0
                 while True:
                     t_start = time.time()
-                    
                     new_last_control_z = self.sensor_packet.rfind(chr(26))
                     if new_last_control_z > last_control_z:
                         last_control_z = new_last_control_z
                         break 
                     if 'Ambiguous Cmd' in self.sensor_packet:
-                        print "unexpectedly got this"
+                        print("unexpectedly got this")
                         #print self.sensor_packet
+                        print("invalid packet 3")
                         valid_packet = False
                         break
                     search_count  += 1
                     if search_count > 100:
+                        print("invalid packet 2")
                         valid_packet = False
-                        print 'Warning:', len(self.sensor_packet)
+                        print('Warning:', len(self.sensor_packet))
                         break
                     time.sleep(.01)
                 if not valid_packet:
+                    print("invalid packet 1")
                     with self.serial_command_queue.mutex:
                         self.serial_command_queue.queue.clear()
                     break
@@ -151,36 +148,40 @@ class Redirector:
                 if self.use_udp:
                     self.sensor_socket.sendto(packet_parser.serialized_packet, (self.client_ip, self.udp_dest_port))
                 else:
+                    print("Sending via TCP")
                     self.socket.sendall(packet_parser.serialized_packet)
-                #print "sending sensor packet", "self.client_ip", self.client_ip, "length", len(self.sensor_packet)
-	    sleep_time = loop_start - time.time() + 0.1
+                print("sending sensor packet", "self.client_ip", self.client_ip, "length", len(packet_parser.serialized_packet))
+            sleep_time = loop_start - time.time() + 0.1
             if sleep_time > 0:
+                print("Sleep time " + str(sleep_time))
                 time.sleep(sleep_time)
-        print "unbinding!"
+        print("unbinding!")
 
     def reader(self):
         """loop forever and copy serial->socket"""
         while self.alive:
             try:
                 self.serial_read_flushed = self.serial.inWaiting() == 0
-                data = self.serial.read(1)              # read one, blocking
+                data = self.serial.read(1).decode('utf-8')              # read one, blocking
                 n = self.serial.inWaiting()             # look if there is more
                 if n:
 		    # TODO: it would be nice to only get full lines, but I'm not sure if this is possible to do fast
-                    data = data + self.serial.read(n)   # and get as much as possible
+                    data = data + self.serial.read(n).decode('utf-8')   # and get as much as possible
                 if data:
                     if self.ser_newline and self.net_newline:
                         # do the newline conversion
                         # XXX fails for CR+LF in input when it is cut in half at the begin or end of the string
                         data = net_newline.join(data.split(ser_newline))
                     # escape outgoing data when needed (Telnet IAC (0xff) character)
-		    self.sensor_packet += data
-            except socket.error, msg:
-                sys.stderr.write('ERROR: %s\n' % msg)
+                    self.sensor_packet += data
+                    #print(self.sensor_packet)
+            except socket.error as ex:
+                sys.stderr.write('ERROR1: %s\n' % str(ex))
                 # probably got disconnected
                 break
-	    except Exception as inst:
+            except Exception as inst:
                 sys.stderr.write('Non-socket error: %s\n' % str(inst))
+        print("Dying 3")
         self.alive = False
 
     def write(self, data):
@@ -189,34 +190,34 @@ class Redirector:
 
     def write_command_to_serial(self, cmd):
         """ cmd is a string that should be sent to the serial port """	
-        # print "writing!" + cmd
+        #print("writing!" + cmd)
         # these commands are special
-        self.serial.write(cmd)
+        self.serial.write(cmd.encode('utf-8'))
 
     def writer(self):
         """loop forever and copy socket->serial"""
-	remainder = ""
+        remainder = ""
         while self.alive:
             try:
-                data = self.socket.recv(1024)
+                data = self.socket.recv(1024).decode('utf-8')
                 if not data:
                     break
-		data = remainder + data
-		if remainder:
-		    remainder = ""
+                data = remainder + data
+                if remainder:
+                    remainder = ""
+                print("command data " + data)
+                if not(data.endswith('\n')):
+                    pos = data.rfind('\n')
+                    if pos != -1:
+                        remainder = data[pos+1:]
+                        data = data[0:pos+1]
+                    else:
+                        remainder = data
+                        data = ""
+                else:
+                    remainder = ""
 
-		if not(data.endswith('\n')):
-		    pos = data.rfind('\n')
-		    if pos != -1:
-			remainder = data[pos+1:]
-			data = data[0:pos+1]
-		    else:
-			remainder = data
-			data = ""
-		else:
-		    remainder = ""
-
-		if data.endswith('\n'):
+                if data.endswith('\n'):
                     # for control commands we always echo the command sent
                     if data.startswith('protocolpreference'):
                         fields = data.split()
@@ -227,11 +228,13 @@ class Redirector:
                         # don't need to do anything... we have reset our timeout though by receiving this message
                         pass
                     else:
+                        print("enqueue " + data)
                         self.serial_command_queue.put((data , data))
-            except socket.error, msg:
-                sys.stderr.write('ERROR: %s\n' % msg)
+            except socket.error as msg:
+                sys.stderr.write('ERROR2: %s\n' % str(msg))
                 # probably got disconnected
                 break
+        print("dying 2")
         self.alive = False
         self.thread_read.join()
         self.thread_main_loop.join()
@@ -239,6 +242,7 @@ class Redirector:
     def stop(self):
         """Stop copying"""
         if self.alive:
+            print("dying 1")
             self.alive = False
             self.thread_read.join()
 
@@ -418,15 +422,15 @@ it waits for the next connect.
             client_ip = addr[0]
 
             connection.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-	    connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 30)
-	    connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 15)
-	    connection.settimeout(60)
+            connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 30)
+            connection.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 15)
+            connection.settimeout(60)
             sys.stderr.write('Connected by %s\n' % (addr,))
             if ser != None:
                 try:
                     ser.close()
                 except Exception as inst:
-                    sys.stderr.write('ERROR: %s\n', str(inst))
+                    sys.stderr.write('ERROR3: %s\n', str(inst))
             # connect to serial port
             ser = connect_to_serial()
             if not options.quiet:
@@ -449,12 +453,13 @@ it waits for the next connect.
             r.shortcut()
             sys.stderr.write('Disconnected\n')
             connection.close()
-	    ser.write('\r\n')
-	    ser.write('testmode off\r\n')
-	    system("sudo killall raspivid")
-	    system("sudo killall gst-launch-1.0")
-	except Exception as inst:
-            sys.stderr.write('ERROR: %s\n' % str(inst))
-	    break
+            ser.write('\r\n'.encode('utf-8'))
+            ser.write('testmode off\r\n'.encode('utf-8'))
+            system("sudo killall raspivid")
+            system("sudo killall gst-launch-1.0")
+        except Exception as inst:
+            sys.stderr.write('ERROR4: %s\n' % str(inst))
+            sys.stderr.write(traceback.format_exc())
+            break
     sys.stderr.write('\n--- exit ---\n')
 

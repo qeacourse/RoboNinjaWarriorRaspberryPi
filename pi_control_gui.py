@@ -41,7 +41,7 @@ import time
 
 old_backlight = -1
 
-print 'Press Ctrl-C to quit.'
+print('Press Ctrl-C to quit.')
 while True:
 	clock = int(time.time())%2 == 0
 	lcd.set_backlight(clock or
@@ -50,12 +50,13 @@ while True:
 	if state == DISPLAY_STATE:
 		proc = subprocess.Popen(["hostname -I"], stdout=subprocess.PIPE, shell=True)
 		(ip_address, err) = proc.communicate()
-		ip_address = ip_address.rstrip()
+		ip_address = ip_address.rstrip().decode('utf-8')
 		proc = subprocess.Popen(["iwgetid -r"], stdout=subprocess.PIPE, shell=True)
 		(ssid, err) = proc.communicate()
-		ssid = ssid.rstrip()
+		ssid = ssid.rstrip().decode('utf-8')
 		proc = subprocess.Popen(["iwconfig wlan0 | egrep Quality"],stdout=subprocess.PIPE,shell=True)
 		(linkquality, err) = proc.communicate()
+		linkquality = linkquality.decode('utf-8')
 		if linkquality.find('=') >=0:
 			linkquality = int(linkquality[linkquality.find('=')+1:linkquality.find('/')])
 		my_message(lcd, ssid + " " + str(linkquality) + "\n" + ip_address)

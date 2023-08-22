@@ -15,8 +15,8 @@
 # Print the IP address
 _IP=$(hostname -I) || true
 echo $_IP
-sudo python ~pi/RoboNinjaWarriorRaspberryPi/hybrid_serial_wrapper.py &
-sudo python ~pi/RoboNinjaWarriorRaspberryPi/pi_control_gui.py &
-sudo python ~pi/RoboNinjaWarriorRaspberryPi/Video/video-manager.py &
-sudo ~pi/RoboNinjaWarriorRaspberryPi/detect_botvac.sh &
+sudo python /home/pi/RoboNinjaWarriorRaspberryPi/hybrid_serial_wrapper.py &
+sudo python /home/pi/RoboNinjaWarriorRaspberryPi/pi_control_gui.py &
+sudo python /home/pi/RoboNinjaWarriorRaspberryPi/Video/video-manager.py &
+sudo /home/pi/RoboNinjaWarriorRaspberryPi/detect_botvac.sh &
 exit 0

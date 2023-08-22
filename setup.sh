@@ -4,14 +4,7 @@ echo "Make sure to run this as root (no sudo)"
 
 echo "blacklist cdc_acm" >> /etc/modprobe.d/blacklist.conf
 
-# configure wifi via wpa_supplicant
-echo "enter SSID:"
-read SSID
-
-echo "enter SSID key:"
-read PSK
-
-wpa_passphrase $SSID $PSK >> /etc/wpa_supplicant/wpa_supplicant.conf
+wpa_passphrase $1 $2 >> /etc/wpa_supplicant/wpa_supplicant.conf
 
 # make sure i2c is configured
 echo "i2c-dev" >> /etc/modules

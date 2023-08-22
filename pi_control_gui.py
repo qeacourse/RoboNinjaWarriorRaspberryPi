@@ -5,7 +5,11 @@ import time
 import subprocess
 from os import system, path
 
-import Adafruit_CharLCD as LCD
+import board
+from adafruit_character_lcd.character_lcd_rgb_i2c import Character_LCD_RGB_I2C
+
+i2c = board.I2C()  # uses board.SCL and board.SDA
+lcd = Character_LCD_RGB_I2C(i2c, 16, 2)
 
 last_message = ""
 
@@ -15,7 +19,7 @@ def my_message(lcd, msg):
 		return
 	last_message = msg
 	lcd.clear()
-	lcd.message(msg)
+	lcd.message = msg
 
 
 DISPLAY_STATE = 0
@@ -33,10 +37,7 @@ ADHOC_MODE = 1
 
 state = DISPLAY_STATE
 
-# Initialize the LCD using the pins 
-lcd = LCD.Adafruit_CharLCDPlate()
-
-lcd.set_backlight(True)
+lcd.backlight = True
 import time
 
 old_backlight = -1
@@ -44,9 +45,7 @@ old_backlight = -1
 print('Press Ctrl-C to quit.')
 while True:
 	clock = int(time.time())%2 == 0
-	lcd.set_backlight(clock or
-			  path.exists('/dev/ttyUSB0') or
-			  path.exists('/dev/ttyUSB1'))
+	lcd.backlight = clock or path.exists('/dev/ttyUSB0') or path.exists('/dev/ttyUSB1')
 	if state == DISPLAY_STATE:
 		proc = subprocess.Popen(["hostname -I"], stdout=subprocess.PIPE, shell=True)
 		(ip_address, err) = proc.communicate()
@@ -103,43 +102,43 @@ while True:
 	elif state == VIDEO_MODE_HEADER:
 		my_message(lcd,"Video Mode Menu")
 
-	if lcd.is_pressed(LCD.RIGHT) and state == VIDEO_MODE_HEADER:
+	if lcd.right_button and state == VIDEO_MODE_HEADER:
 		state = SELECT_VIDEO_MODE
 		video_mode = 0
-	elif lcd.is_pressed(LCD.DOWN) and state == SELECT_VIDEO_MODE:
+	elif lcd.down_button and state == SELECT_VIDEO_MODE:
 		video_mode = (video_mode + 1)% len(VIDEO_MODES)
-	elif lcd.is_pressed(LCD.UP) and state == SELECT_VIDEO_MODE:
+	elif lcd.up_button and state == SELECT_VIDEO_MODE:
 		video_mode = (video_mode - 1)% len(video_modes)
-	elif lcd.is_pressed(LCD.LEFT) and state == SELECT_VIDEO_MODE:
+	elif lcd.left_button and state == SELECT_VIDEO_MODE:
 		state = VIDEO_MODE_HEADER
-	elif lcd.is_pressed(LCD.RIGHT) and state == SELECT_VIDEO_MODE:
+	elif lcd.right_button and state == SELECT_VIDEO_MODE:
 		state = VIDEO_MODE_RECONFIGURE
-	elif lcd.is_pressed(LCD.RIGHT) and state == DISPLAY_STATE:
+	elif lcd.right_button and state == DISPLAY_STATE:
 		state = SELECT_NETWORK_MODE_STATE
 		network_mode = MANAGED_MODE
-	elif lcd.is_pressed(LCD.DOWN) and state == DISPLAY_STATE:
+	elif lcd.down_button and state == DISPLAY_STATE:
 		state = VIDEO_MODE_HEADER
-	elif lcd.is_pressed(LCD.DOWN) and state == VIDEO_MODE_HEADER:
+	elif lcd.down_button and state == VIDEO_MODE_HEADER:
 		state = POWER_DOWN_PROMPT_STATE
-	elif lcd.is_pressed(LCD.DOWN) and state == POWER_DOWN_PROMPT_STATE:
+	elif lcd.down_button and state == POWER_DOWN_PROMPT_STATE:
 		state = DISPLAY_STATE
-	elif lcd.is_pressed(LCD.UP) and state == DISPLAY_STATE:
+	elif lcd.up_button and state == DISPLAY_STATE:
 		state = POWER_DOWN_PROMPT_STATE
-	elif lcd.is_pressed(LCD.UP) and state == VIDEO_MODE_HEADER:
+	elif lcd.up_button and state == VIDEO_MODE_HEADER:
 		state = DISPLAY_STATE
-	elif lcd.is_pressed(LCD.UP) and state == POWER_DOWN_PROMPT_STATE:
+	elif lcd.up_button and state == POWER_DOWN_PROMPT_STATE:
 		state = VIDEO_MODE_HEADER
-	elif (lcd.is_pressed(LCD.DOWN) or lcd.is_pressed(LCD.UP)) and state == SELECT_NETWORK_MODE_STATE:
+	elif (lcd.down_button or lcd.up_button) and state == SELECT_NETWORK_MODE_STATE:
 		if network_mode == MANAGED_MODE:
 			network_mode = ADHOC_MODE
 		else:
 			network_mode = MANAGED_MODE
-	elif lcd.is_pressed(LCD.LEFT) and state == SELECT_NETWORK_MODE_STATE:
+	elif lcd.left_button and state == SELECT_NETWORK_MODE_STATE:
 		state = DISPLAY_STATE
-	elif (lcd.is_pressed(LCD.RIGHT) or lcd.is_pressed(LCD.SELECT)) and state == SELECT_NETWORK_MODE_STATE:
+	elif (lcd.right_button or lcd.select_button) and state == SELECT_NETWORK_MODE_STATE:
 		state = NETWORK_RECONFIGURE_STATE
-	elif (lcd.is_pressed(LCD.SELECT) or lcd.is_pressed(LCD.RIGHT)) and state == POWER_DOWN_PROMPT_STATE:
-		lcd.set_backlight(False)
+	elif (lcd.select_button or lcd.right_button) and state == POWER_DOWN_PROMPT_STATE:
+		lcd.backlight = False
 		lcd.clear()
 		system("sudo pkill -HUP -f hybrid_serial_redirect.py")
 		system("shutdown -h now")

@@ -1,0 +1,13 @@
+
+echo "enter SSID:"
+read SSID
+
+echo "enter SSID key:"
+read PSK
+
+sudo apt-get update
+sudo apt-get install -y git tcpdump python3-pip gstreamer1.0-tools gstreamer1.0-plugins-bad gstreamer1.0-plugins-good
+git clone https://github.com/qeacourse/RoboNinjaWarriorRaspberryPi
+cd RoboNinjaWarriorRaspberryPi
+git checkout python3_support
+sudo ./setup.sh $SSID $PSK

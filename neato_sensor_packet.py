@@ -20,7 +20,6 @@ class NeatoSensorPacket(object):
     def parse_packet(self, raw_packet):
         neato_outputs = raw_packet.split(chr(26))
         self.response_dict = {resp[:resp.find('\r')]: resp for resp in neato_outputs}
-        print(str(self.response_dict.keys()))
         ranges, intensites = self.getScanRanges()
         self.getMotors()
         self.getDigitalSensors()
@@ -36,7 +35,6 @@ class NeatoSensorPacket(object):
                 			   self.state["YInG"],
                  			   self.state["ZInG"],
                 			   self.state["SumInG"] )
-        print("after all " + str(len(pickle.dumps(packet_dict))))
         self.serialized_packet = pickle.dumps(packet_dict)
 
     def getMotors(self):
@@ -51,7 +49,6 @@ class NeatoSensorPacket(object):
                 # something weird happened bail
                 raise IOError('Get Motors Failed')
             listing = [s.strip() for s in line.splitlines()]
-            print("listing " + str(len(listing)))
             for i,l in enumerate(listing):
                 if l.startswith('Parameter,Value'):
                     listing = listing[i+1:]
@@ -59,7 +56,6 @@ class NeatoSensorPacket(object):
             for i in range(len(listing)):
                 try:
                     values = listing[i].split(',')
-                    print("setting state!")
                     self.state[values[0]] = int(values[1])
                 except Exception as inst:
                     print("exception!")
@@ -94,7 +90,6 @@ class NeatoSensorPacket(object):
                     pass
         else:
             pass
-           # print "missing accelerometer values"
 
         return [self.state["PitchInDegrees"],
                 self.state["RollInDegrees"],
@@ -123,7 +118,6 @@ class NeatoSensorPacket(object):
                     pass
         else:
             pass
-           # print "didn't get digital sensors"
         return [self.state['LFRONTBIT'],self.state['LSIDEBIT'],self.state['RFRONTBIT'],self.state['RSIDEBIT']]
 
 
@@ -132,7 +126,6 @@ class NeatoSensorPacket(object):
         ranges = list()
         intensities = list()
         if 'getldsscan' not in self.response_dict:
-            #print 'missing scan ranges'
             return ([],[])
 
         try:

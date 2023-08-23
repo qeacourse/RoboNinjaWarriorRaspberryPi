@@ -150,7 +150,6 @@ class Redirector:
                 else:
                     print("Sending via TCP")
                     self.socket.sendall(packet_parser.serialized_packet)
-                print("sending sensor packet", "self.client_ip", self.client_ip, "length", len(packet_parser.serialized_packet))
             sleep_time = loop_start - time.time() + 0.1
             if sleep_time > 0:
                 print("Sleep time " + str(sleep_time))

@@ -37,15 +37,15 @@ ADHOC_MODE = 1
 
 state = DISPLAY_STATE
 
-lcd.backlight = True
+white_color = [255, 255, 255]
+red_color = [255, 0, 0]
+lcd.color = white_color
 import time
-
-old_backlight = -1
 
 print('Press Ctrl-C to quit.')
 while True:
 	clock = int(time.time())%2 == 0
-	lcd.backlight = clock or path.exists('/dev/ttyUSB0') or path.exists('/dev/ttyUSB1')
+	lcd.color = white_color if clock or path.exists('/dev/ttyUSB0') or path.exists('/dev/ttyUSB1') else red_color
 	if state == DISPLAY_STATE:
 		proc = subprocess.Popen(["hostname -I"], stdout=subprocess.PIPE, shell=True)
 		(ip_address, err) = proc.communicate()
@@ -138,7 +138,7 @@ while True:
 	elif (lcd.right_button or lcd.select_button) and state == SELECT_NETWORK_MODE_STATE:
 		state = NETWORK_RECONFIGURE_STATE
 	elif (lcd.select_button or lcd.right_button) and state == POWER_DOWN_PROMPT_STATE:
-		lcd.backlight = False
+		lcd.color = [0, 0, 0]
 		lcd.clear()
 		system("sudo pkill -HUP -f hybrid_serial_redirect.py")
 		system("shutdown -h now")

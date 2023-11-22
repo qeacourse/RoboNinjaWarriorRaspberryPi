@@ -15,13 +15,17 @@ class NeatoSensorPacket(object):
                       "XInG":0.0,
 		      "YInG":0.0,
             	      "ZInG":0.0,
-		      "SumInG":0.0}
+		      "SumInG":0.0,
+                      "BatteryVoltage":0.0,
+                      "FuelPercent": 0}
 
     def parse_packet(self, raw_packet, use_pickle):
         neato_outputs = raw_packet.split(chr(26))
         self.response_dict = {resp[:resp.find('\r')]: resp for resp in neato_outputs}
         ranges, intensites = self.getScanRanges()
         self.getMotors()
+        self.getAnalogSensors()
+        self.getCharger()
         self.getDigitalSensors()
         self.getAccel()
         packet_dict = {}
@@ -38,10 +42,13 @@ class NeatoSensorPacket(object):
         if use_pickle:
             self.serialized_packet = pickle.dumps(packet_dict)
         else:
+            # experimenting with sending battery voltage to MATLAB
             self.serialized_packet = packet_dict['accel'] + \
                                      packet_dict['motors'] + \
                                      packet_dict['digitalsensors'] + \
-                                     packet_dict['ldsscanranges'][1]
+                                     packet_dict['ldsscanranges'][1] + \
+                                     struct.pack('<1H', self.state['BatteryVoltage']) + \
+                                     struct.pack('<1H', self.state['FuelPercent'])
 
     def getMotors(self):
         """ Update values for motors in the self.state dictionary.
@@ -69,6 +76,34 @@ class NeatoSensorPacket(object):
         else:
             print("failed to get odometry information")
         return [self.state["LeftWheel_PositionInMM"],self.state["RightWheel_PositionInMM"]]
+
+    def getAnalogSensors(self):
+        if 'getanalogsensors' in self.response_dict:
+            line = self.response_dict['getanalogsensors']
+            if line.find('Unknown Cmd') != -1:
+                raise IOError('Get Analog Sensors Failed')
+
+            listing = [s.strip() for s in line.splitlines()]
+            for i in range(len(listing)-1):
+                try:
+                    values = listing[i+1].split(',')
+                    self.state[values[0]] = int(values[2])
+                except:
+                    pass
+
+    def getCharger(self):
+        if 'getcharger' in self.response_dict:
+            line = self.response_dict['getcharger']
+            if line.find('Unknown Cmd') != -1:
+                raise IOError('Get Charger Failed')
+            listing = [s.strip() for s in line.splitlines()]
+            for i in range(len(listing)-1):
+                try:
+                    values = listing[i+1].split(',')
+                    self.state[values[0]] = int(values[1])
+                except:
+                    pass
+
 
     def getAccel(self):
         """ Update values for motors in the self.state dictionary.

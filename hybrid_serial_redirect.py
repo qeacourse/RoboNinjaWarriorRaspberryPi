@@ -29,7 +29,7 @@ def catch_SIGHUP(*args):
         print("gracefully shutting down")
         ser.write('\r\n'.encode('utf-8'))
         ser.write('testmode off\r\n'.encode('utf-8'))
-        print("got the signal!")	
+        print("got the signal!")
 
 def connect_to_serial():
     global ser
@@ -111,6 +111,8 @@ class Redirector:
             self.serial_command_queue.put(("getldsscan\n",'.*ROTATION_SPEED,[0-9\.]+'))
             self.serial_command_queue.put(("getmotors\n", '.*SideBrush_mA,[0-9\.]+'))
             self.serial_command_queue.put(("getdigitalsensors\n", '.*RFRONTBIT,[0-9\.]+'))
+            self.serial_command_queue.put(("getanalogsensors\n", '.*BatteryTemp1InC,[0-9\.]+'))
+            self.serial_command_queue.put(("getcharger\n", '.*PWM,[-0-9.]+'))
             self.serial_command_queue.put(("getaccel\n", '.*SumInG, [0-9\.]+'))
             while not self.serial_command_queue.empty():
                 next_cmd, terminal_re = self.serial_command_queue.get()

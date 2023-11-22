@@ -17,7 +17,7 @@ class NeatoSensorPacket(object):
             	      "ZInG":0.0,
 		      "SumInG":0.0,
                       "BatteryVoltage":0.0,
-                      "FuelPercent": 0}
+                      "FuelPercent": 101}
 
     def parse_packet(self, raw_packet, use_pickle):
         neato_outputs = raw_packet.split(chr(26))
@@ -49,6 +49,7 @@ class NeatoSensorPacket(object):
                                      packet_dict['ldsscanranges'][1] + \
                                      struct.pack('<1H', self.state['BatteryVoltage']) + \
                                      struct.pack('<1H', self.state['FuelPercent'])
+        return self.state['FuelPercent'] < 25
 
     def getMotors(self):
         """ Update values for motors in the self.state dictionary.

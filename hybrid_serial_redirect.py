@@ -145,7 +145,9 @@ class Redirector:
                     break
 
             if valid_packet:
-                packet_parser.parse_packet(self.sensor_packet, self.use_pickle)
+                low_battery = packet_parser.parse_packet(self.sensor_packet, self.use_pickle)
+                if low_battery:
+                     self.write_command_to_serial('setsystemmode shutdown\n')
                 if self.use_udp:
                     self.sensor_socket.sendto(packet_parser.serialized_packet, (self.client_ip, self.udp_dest_port))
                 else:

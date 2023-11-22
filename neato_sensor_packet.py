@@ -17,7 +17,7 @@ class NeatoSensorPacket(object):
             	      "ZInG":0.0,
 		      "SumInG":0.0}
 
-    def parse_packet(self, raw_packet):
+    def parse_packet(self, raw_packet, use_pickle):
         neato_outputs = raw_packet.split(chr(26))
         self.response_dict = {resp[:resp.find('\r')]: resp for resp in neato_outputs}
         ranges, intensites = self.getScanRanges()
@@ -35,7 +35,13 @@ class NeatoSensorPacket(object):
                 			   self.state["YInG"],
                  			   self.state["ZInG"],
                 			   self.state["SumInG"] )
-        self.serialized_packet = pickle.dumps(packet_dict)
+        if use_pickle:
+            self.serialized_packet = pickle.dumps(packet_dict)
+        else:
+            self.serialized_packet = packet_dict['accel'] + \
+                                     packet_dict['motors'] + \
+                                     packet_dict['digitalsensors'] + \
+                                     packet_dict['ldsscanranges'][1]
 
     def getMotors(self):
         """ Update values for motors in the self.state dictionary.

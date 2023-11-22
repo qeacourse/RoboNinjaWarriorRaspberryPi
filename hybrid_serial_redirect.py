@@ -67,6 +67,7 @@ class Redirector:
 
         # assume UDP until told otherwise
         self.udp_dest_port = 7777
+        self.use_pickle = True
         self.use_udp = True
 
         self.ser_newline = ser_newline
@@ -142,9 +143,7 @@ class Redirector:
                     break
 
             if valid_packet:
-                # self.write(self.sensor_packet)
-		# XXX: truncating packet to test UDP forwarding
-                packet_parser.parse_packet(self.sensor_packet)
+                packet_parser.parse_packet(self.sensor_packet, self.use_pickle)
                 if self.use_udp:
                     self.sensor_socket.sendto(packet_parser.serialized_packet, (self.client_ip, self.udp_dest_port))
                 else:
@@ -223,6 +222,8 @@ class Redirector:
                         self.use_udp = fields[1].strip() == 'True'
                         if len(fields) >= 3:
                             self.udp_dest_port = int(fields[2].strip())
+                        if len(fields) >= 4:
+                            self.use_pickle = fields[3].strip() == 'True'
                     elif data.startswith('keepalive'):
                         # don't need to do anything... we have reset our timeout though by receiving this message
                         pass

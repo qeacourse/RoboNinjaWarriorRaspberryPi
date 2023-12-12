@@ -42,11 +42,16 @@ red_color = [255, 0, 0]
 lcd.color = white_color
 import time
 
+network_status_count = 0
+
 print('Press Ctrl-C to quit.')
 while True:
 	clock = int(time.time())%2 == 0
 	lcd.color = white_color if clock or path.exists('/dev/ttyUSB0') or path.exists('/dev/ttyUSB1') else red_color
 	if state == DISPLAY_STATE:
+		network_status_count += 1
+		if network_status_count % 400 != 0:
+			continue
 		proc = subprocess.Popen(["hostname -I"], stdout=subprocess.PIPE, shell=True)
 		(ip_address, err) = proc.communicate()
 		ip_address = ip_address.rstrip().decode('utf-8')

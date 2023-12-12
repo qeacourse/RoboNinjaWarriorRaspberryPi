@@ -42,16 +42,14 @@ red_color = [255, 0, 0]
 lcd.color = white_color
 import time
 
-network_status_count = 0
+network_status_count = -1
 
 print('Press Ctrl-C to quit.')
 while True:
 	clock = int(time.time())%2 == 0
 	lcd.color = white_color if clock or path.exists('/dev/ttyUSB0') or path.exists('/dev/ttyUSB1') else red_color
-	if state == DISPLAY_STATE:
-		network_status_count += 1
-		if network_status_count % 400 != 0:
-			continue
+	network_status_count += 1
+	if state == DISPLAY_STATE and network_status_count % 400 == 0:
 		proc = subprocess.Popen(["hostname -I"], stdout=subprocess.PIPE, shell=True)
 		(ip_address, err) = proc.communicate()
 		ip_address = ip_address.rstrip().decode('utf-8')
@@ -92,6 +90,7 @@ while True:
 		elif VIDEO_MODES[video_mode] == "1024x768 H264":
 			system('sudo ~pi/video_wrapper.sh "-ex sports -h 768 -w 1024 -fps 10 -mm matrix" &')
 		state = DISPLAY_STATE
+		network_status_count = -1
 	elif state == NETWORK_RECONFIGURE_STATE:
 		my_message(lcd,"Reconfiguring\nnetwork...")
 		if network_mode == ADHOC_MODE:
@@ -104,6 +103,7 @@ while True:
 		print("this does not properly support UDP gstreamer")
 		system("sudo killall gst-launch-1.0")
 		state = DISPLAY_STATE
+		network_status_count = -1
 	elif state == VIDEO_MODE_HEADER:
 		my_message(lcd,"Video Mode Menu")
 
@@ -127,10 +127,12 @@ while True:
 		state = POWER_DOWN_PROMPT_STATE
 	elif lcd.down_button and state == POWER_DOWN_PROMPT_STATE:
 		state = DISPLAY_STATE
+		network_status_count = -1
 	elif lcd.up_button and state == DISPLAY_STATE:
 		state = POWER_DOWN_PROMPT_STATE
 	elif lcd.up_button and state == VIDEO_MODE_HEADER:
 		state = DISPLAY_STATE
+		network_status_count = -1
 	elif lcd.up_button and state == POWER_DOWN_PROMPT_STATE:
 		state = VIDEO_MODE_HEADER
 	elif (lcd.down_button or lcd.up_button) and state == SELECT_NETWORK_MODE_STATE:

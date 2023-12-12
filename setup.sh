@@ -18,7 +18,7 @@ echo "gpu_mem=128" >> /boot/config.txt
 cp rc.local /etc/rc.local
 cp interfaces /etc/network/interfaces
 
-pip3 install adafruit-circuitpython-charlcd
+pip3 install --break-system-packages adafruit-circuitpython-charlcd
 chmod u+s /usr/bin/tcpdump
 
 
